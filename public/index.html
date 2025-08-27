@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ECG Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Extra animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    .float { animation: float 3s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-white min-h-screen flex flex-col font-sans">
+
+<!-- Header -->
+<header class="sticky top-0 bg-white/70 backdrop-blur-md shadow z-50">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <img src="https://img.icons8.com/fluency/48/heart-with-pulse.png" alt="logo" class="w-10 h-10 float">
+      <h1 class="text-2xl font-extrabold text-indigo-700 tracking-tight">ECG Monitoring Portal</h1>
+    </div>
+    <nav class="space-x-4">
+      <a href="doctor_login.html" class="px-5 py-2 rounded-full font-medium text-white bg-gradient-to-r from-indigo-600 to-indigo-700 shadow-md
+      transition-all duration-300 ease-out
+      hover:from-indigo-500 hover:to-purple-600 hover:shadow-lg hover:scale-105">Login</a>
+      <a href="doctor_register.html" class="px-5 py-2 rounded-full font-medium text-white bg-gradient-to-r from-indigo-600 to-indigo-700 shadow-md
+      transition-all duration-300 ease-out
+      hover:from-indigo-500 hover:to-purple-600 hover:shadow-lg hover:scale-105">Register</a>
+    </nav>
+  </div>
+</header>
+<!-- Hero Section with Static Shapes -->
+<section class="relative text-white py-24 bg-gradient-to-r from-indigo-600 to-blue-600 overflow-hidden">
+  
+  <!-- Decorative SVG Wave -->
+  <div class="absolute inset-x-0 bottom-0">
+    <svg viewBox="0 0 1440 320" class="w-full h-32 text-indigo-500 opacity-30">
+      <path fill="currentColor" fill-opacity="1" 
+            d="M0,192L60,202.7C120,213,240,235,360,213.3C480,192,600,128,720,133.3C840,139,960,213,1080,240C1200,267,1320,245,1380,234.7L1440,224L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z">
+      </path>
+    </svg>
+  </div>
+
+  <!-- Floating Circles -->
+  <div class="absolute top-10 left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+  <div class="absolute top-40 right-20 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+
+  <!-- Content -->
+  <div class="relative max-w-6xl mx-auto px-6 text-center">
+    <h2 class="text-4xl md:text-5xl font-extrabold leading-tight">
+      Smart ECG Monitoring Made Easy
+    </h2>
+    <p class="mt-4 text-lg text-gray-200 max-w-2xl mx-auto">
+      Securely record, monitor, and analyze ECG signals with real-time updates for doctors and patients.
+    </p>
+    <div class="mt-8 flex justify-center space-x-4">
+      <a href="patient.html" 
+         class="px-6 py-3 bg-white text-indigo-700 font-semibold rounded-full shadow hover:bg-gray-100 hover:scale-105 transition">
+        Start as Patient
+      </a>
+      <a href="doctor_login.html" 
+         class="px-6 py-3 bg-indigo-800 text-white font-semibold rounded-full shadow hover:bg-indigo-900 hover:scale-105 transition">
+        Doctor Login
+      </a>
+    </div>
+  </div>
+</section>
+
+
+
+
+<!-- Features -->
+<main class="flex-grow">
+  <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 p-10">
+    
+    <a href="doctor_register.html" class="group bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-gray-100 hover:border-indigo-400 hover:shadow-2xl transition transform hover:-translate-y-2">
+      <img src="https://img.icons8.com/color/96/add-user-male.png" class="mx-auto mb-4 group-hover:scale-110 transition" />
+      <h2 class="text-xl font-semibold text-center text-indigo-700">Doctor Register</h2>
+      <p class="text-center text-gray-600 mt-2">Create secure doctor accounts to access patient records.</p>
+    </a>
+
+    <a href="doctor_login.html" class="group bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-gray-100 hover:border-green-400 hover:shadow-2xl transition transform hover:-translate-y-2">
+      <img src="https://img.icons8.com/color/96/doctor-male.png" class="mx-auto mb-4 group-hover:scale-110 transition" />
+      <h2 class="text-xl font-semibold text-center text-green-600">Doctor Login</h2>
+      <p class="text-center text-gray-600 mt-2">Sign in to manage patients and review ECGs.</p>
+    </a>
+
+    <a href="patient.html" class="group bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-gray-100 hover:border-blue-400 hover:shadow-2xl transition transform hover:-translate-y-2">
+      <img src="https://img.icons8.com/color/96/heart-with-pulse.png" class="mx-auto mb-4 group-hover:scale-110 transition" />
+      <h2 class="text-xl font-semibold text-center text-blue-600">Patient ECG</h2>
+      <p class="text-center text-gray-600 mt-2">Capture real-time ECG signals from your device.</p>
+    </a>
+
+    <a href="doctor_dashboard.html" class="group bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-lg border border-gray-100 hover:border-purple-400 hover:shadow-2xl transition transform hover:-translate-y-2">
+      <img src="https://img.icons8.com/color/96/combo-chart.png" class="mx-auto mb-4 group-hover:scale-110 transition" />
+      <h2 class="text-xl font-semibold text-center text-purple-600">Doctor Dashboard</h2>
+      <p class="text-center text-gray-600 mt-2">View, filter, and download saved ECG recordings.</p>
+    </a>
+
+  </div>
+</main>
+
+<!-- Footer -->
+<footer class="bg-white shadow-inner mt-10">
+  <div class="max-w-6xl mx-auto px-6 py-6 text-center text-sm text-gray-500">
+    <p>© 2025 ECG Monitoring System · <a href="about.html" class="hover:text-indigo-600 transition">About Us</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

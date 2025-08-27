@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Doctor Dashboard - ECG Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+<header class="bg-white shadow">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+      <img src="https://img.icons8.com/fluency/48/heart-with-pulse.png" alt="logo" class="w-10 h-10">
+      <h1 class="text-xl font-bold text-indigo-700">Doctor Dashboard</h1>
+    </div>
+    <div>
+      <span id="welcome" 
+      class="bg-indigo-50 text-gray-800 font-semibold px-3 py-1 rounded-full shadow-sm text-sm tracking-wide mr-4">
+</span>
+
+      <a href="index.html" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Home</a>
+      <button onclick="logout()" class="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-indigo-700 transition">Logout</button>
+    </div>
+  </div>
+</header>
+
+<main class="flex-grow p-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="bg-white rounded-2xl shadow p-6 mb-6">
+      <div class="flex gap-4 items-end">
+        <div>
+          <label class="text-sm text-gray-500">Patient name</label>
+          <input id="searchName" class="border rounded p-2" placeholder="Search name">
+        </div>
+        <div>
+          <label class="text-sm text-gray-500">Start date</label>
+          <input id="startDate" type="date" class="border rounded p-2">
+        </div>
+        <div>
+          <label class="text-sm text-gray-500">End date</label>
+          <input id="endDate" type="date" class="border rounded p-2">
+        </div>
+        <div>
+          <button onclick="applyFilters()" class="bg-indigo-600 text-white px-4 py-2 rounded">Apply</button>
+          <button onclick="clearFilters()" class="bg-gray-200 px-4 py-2 rounded">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow p-6">
+      <h3 class="text-lg font-semibold mb-4">Patient Records</h3>
+      <div class="overflow-x-auto">
+        <table id="patientTable" class="min-w-full">
+          <thead class="bg-gray-100"><tr><th class="p-3 text-left">ID</th><th class="p-3 text-left">Name</th><th class="p-3 text-left">Date</th><th class="p-3">Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <h3 class="text-lg font-semibold mt-6">ECG Preview</h3>
+      <canvas id="ecgChart" height="120"></canvas>
+    </div>
+  </div>
+</main>
+
+<script>
+if (sessionStorage.getItem('loggedIn') !== 'true') {
+  // still allow but show limited features
+  document.getElementById('welcome').textContent = 'Guest';
+} else {
+  document.getElementById('welcome').textContent ='@'+ sessionStorage.getItem('doctorName') || '@'+sessionStorage.getItem('doctorUser');
+}
+
+let ecgChart;
+async function fetchPatients(query='') {
+  try {
+    const res = await fetch('/patients' + query);
+    const data = await res.json();
+    const tbody = document.querySelector('#patientTable tbody');
+    tbody.innerHTML = '';
+    data.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="p-3">${p.id}</td><td class="p-3">${p.name}</td><td class="p-3">${new Date(p.created_at).toLocaleString()}</td><td class="p-3 text-center"><button class="bg-green-500 text-white px-3 py-1 rounded mr-2" onclick='viewECG("${encodeURIComponent(p.ecg_data)}")'>View</button><button class="bg-blue-500 text-white px-3 py-1 rounded" onclick='downloadCSV("${encodeURIComponent(p.ecg_data)}","${p.name.replace(/"/g,'')}.csv")'>Download</button></td>`;
+      tbody.appendChild(tr);
+    });
+  } catch (err) { console.error(err); alert('Failed to fetch'); }
+}
+
+function viewECG(encoded) {
+  let str = decodeURIComponent(encoded);
+  let arr = [];
+  try { arr = JSON.parse(str); } catch(e){ arr = []; }
+  if (ecgChart) ecgChart.destroy();
+  const ctx = document.getElementById('ecgChart').getContext('2d');
+  ecgChart = new Chart(ctx, { type:'line', data:{ labels: arr.map((_,i)=>i), datasets:[{ label:'ECG', data: arr, borderColor:'#10b981', fill:false, tension:0.2 }] }, options:{ responsive:true, scales:{ x:{ display:false } } } });
+}
+
+function downloadCSV(encoded, filename) {
+  const str = decodeURIComponent(encoded);
+  let arr = [];
+  try { arr = JSON.parse(str); } catch(e){ arr = []; }
+  let csv = 'index,value\n'; arr.forEach((v,i)=> csv += `${i},${v}\n`);
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename || 'ecg.csv'; a.click(); URL.revokeObjectURL(url);
+}
+
+function applyFilters() {
+  const name = document.getElementById('searchName').value.trim();
+  const start = document.getElementById('startDate').value;
+  const end = document.getElementById('endDate').value;
+  const params = new URLSearchParams();
+  if (name) params.set('name', name);
+  if (start) params.set('start', start);
+  if (end) params.set('end', end);
+  fetchPatients('?' + params.toString());
+}
+
+function clearFilters() { document.getElementById('searchName').value=''; document.getElementById('startDate').value=''; document.getElementById('endDate').value=''; fetchPatients(); }
+function logout(){ sessionStorage.clear(); location.href='doctor_login.html'; }
+
+window.onload = () => { fetchPatients(); };
+</script>
+</body>
+</html>

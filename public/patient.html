@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Patient ECG - ECG Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+<header class="bg-white shadow">
+  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-4">
+      <img src="https://img.icons8.com/color/48/heart-with-pulse.png" alt="logo">
+      <h1 class="text-xl font-bold text-indigo-700">Capture ECG</h1>
+    </div>
+    <div class="flex items-center space-x-4">
+      <a href="index.html" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Home</a>
+      <a href="doctor_dashboard.html" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Dashboard</a>
+      <button onclick="logout()" class="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-indigo-700 transition">Logout</button>
+    </div>
+  </div>
+</header>
+
+<main class="flex-grow p-6">
+  <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow p-6">
+    <div class="mb-4">
+      <label class="block text-sm text-gray-600">Patient Name</label>
+      <input id="patientName" class="w-full border rounded p-3" placeholder="Enter patient name">
+    </div>
+
+    <div class="mb-4 flex gap-2">
+      <button id="startBtn" class="bg-indigo-600 text-white px-4 py-2 rounded">Start</button>
+      <button id="connectBtn" class="bg-green-600 text-white px-4 py-2 rounded">Connect Device</button>
+      <button id="stopBtn" class="bg-red-500 text-white px-4 py-2 rounded">Stop & Save</button>
+      <button id="downloadBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Download CSV</button>
+      <div class="ml-auto text-sm">
+        <div id="status" class="text-gray-700">Status: Disconnected</div>
+        <div id="rate" class="text-gray-700">Rate: — Hz</div>
+        <div id="bpm" class="text-gray-700">BPM: —</div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div class="p-4 bg-green-50 rounded shadow">
+        <div class="text-sm text-gray-500">Signal Quality</div>
+        <div id="signalQuality" class="text-lg font-semibold">Good</div>
+      </div>
+      <div class="p-4 bg-yellow-50 rounded shadow">
+        <div class="text-sm text-gray-500">Alerts</div>
+        <div id="alertBox" class="text-lg font-semibold text-green-700">Normal</div>
+      </div>
+      <div class="p-4 bg-white rounded shadow">
+        <div class="text-sm text-gray-500">Patient</div>
+        <div id="patientTitle" class="text-lg font-semibold">—</div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="chart" height="200"></canvas>
+    </div>
+  </div>
+</main>
+
+<script>
+// Redirect if not logged in
+if (sessionStorage.getItem('loggedIn') !== 'true') {
+  // allow access but recommend login; still let user use local capture
+  // location.href = 'doctor_login.html';
+}
+
+// Chart setup
+const ctx = document.getElementById('chart').getContext('2d');
+const BUFFER_SECONDS = 10;
+const TARGET_HZ = 60;
+const MAX_POINTS = BUFFER_SECONDS * TARGET_HZ;
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: { labels: Array(MAX_POINTS).fill(''), datasets: [{ label: 'ECG', data: Array(MAX_POINTS).fill(null), borderColor: '#0ea5e9', borderWidth: 1, pointRadius: 0, tension: 0 }] },
+  options: { responsive: true, animation: false, scales: { x: { display: false }, y: { suggestedMin: 0, suggestedMax: 60 } }, plugins: { legend: { display: false } } }
+});
+
+let port, reader, readActive = false, ecgValues = [], lastPeak = 0, rr = [], lastCount = 0, lastTime = performance.now();
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  const name = document.getElementById('patientName').value.trim();
+  if (!name) { alert('Enter patient name'); return; }
+  document.getElementById('patientTitle').textContent = name + ' | ' + new Date().toLocaleString();
+  document.querySelector('#alertBox').textContent = 'Normal'; document.querySelector('#alertBox').classList.remove('text-red-700');
+  document.getElementById('ecgSection')?.remove();
+});
+
+document.getElementById('connectBtn').addEventListener('click', async () => {
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 9600 });
+    document.getElementById('status').textContent = 'Status: Connected';
+    const decoder = new TextDecoderStream();
+    port.readable.pipeTo(decoder.writable);
+    reader = decoder.readable.getReader();
+    readActive = true; readLoop();
+  } catch (err) { console.error(err); alert('Serial connect failed'); }
+});
+
+document.getElementById('stopBtn').addEventListener('click', async () => {
+  readActive = false;
+  if (reader) { await reader.cancel(); reader = null; }
+  if (port) { await port.close(); port = null; }
+  document.getElementById('status').textContent = 'Status: Stopped';
+  // save to backend if logged in or server reachable
+  const name = document.getElementById('patientName').value.trim();
+  if (name && ecgValues.length > 0) {
+    try {
+      await fetch('/patients', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, ecg_data: ecgValues }) });
+      alert('Saved to database');
+    } catch (err) {
+      console.error('Save failed', err);
+      alert('Unable to save to server; data kept locally. You can download CSV.');
+    }
+  }
+});
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  if (ecgValues.length === 0) { alert('No data'); return; }
+  let csv = 'time,value\n'; ecgValues.forEach((v,i)=> csv += `${new Date().toISOString()},${v}\n`);
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='ecg.csv'; a.click(); URL.revokeObjectURL(url);
+});
+
+async function readLoop() {
+  let leftover = '';
+  while (readActive) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    const chunk = leftover + value;
+    const lines = chunk.split(/\r?\n/);
+    leftover = lines.pop();
+    for (const line of lines) {
+      if (!line) continue;
+      const parts = line.split(',');
+      const y = parseInt(parts[parts.length-1], 10);
+      if (Number.isNaN(y)) continue;
+      // update chart buffer
+      const arr = chart.data.datasets[0].data; arr.push(y); while (arr.length>MAX_POINTS) arr.shift();
+      chart.data.labels.push(''); while (chart.data.labels.length>MAX_POINTS) chart.data.labels.shift();
+      chart.update('none');
+      ecgValues.push(y);
+      const now = performance.now();
+      // simple R-peak detection
+      if (y > 40 && now - lastPeak > 300) {
+        if (lastPeak) {
+          const interval = now - lastPeak; rr.push(interval); if (rr.length>6) rr.shift();
+          const avg = rr.reduce((a,b)=>a+b,0)/rr.length; const bpm = Math.round(60000/avg);
+          document.getElementById('bpm').textContent = 'BPM: ' + bpm;
+          const alertBox = document.getElementById('alertBox');
+          if (bpm > 450) { alertBox.textContent = 'Normal'; alertBox.classList.add('text-red-700'); }
+          else if (bpm < 280) { alertBox.textContent = ' Normal'; alertBox.classList.add('text-red-700'); }
+          else { alertBox.textContent = '⚠️ Abnormal'; alertBox.classList.remove('text-red-700'); }
+        }
+        lastPeak = now;
+      }
+      lastCount++;
+      if (now - lastTime >= 1000) { document.getElementById('rate').textContent = 'Rate: ' + lastCount + ' Hz'; lastCount=0; lastTime = now; }
+    }
+  }
+}
+function logout(){ sessionStorage.clear(); location.href='doctor_login.html'; }
+</script>
+</body>
+</html>

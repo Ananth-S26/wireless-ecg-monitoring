@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Register - ECG Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+<header class="bg-white shadow">
+  <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+    <h1 class="text-xl font-bold text-indigo-700">ECG Monitoring Portal</h1>
+    <a href="index.html" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Home</a>
+  </div>
+</header>
+
+<main class="flex-grow flex items-center justify-center p-6">
+  <div class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-md">
+    <div class="text-center mb-6">
+      <img src="https://img.icons8.com/color/96/add-user-male.png" class="mx-auto mb-3">
+      <h2 class="text-2xl font-semibold text-indigo-700">Doctor Registration</h2>
+      <p class="text-gray-500">Create your secure account</p>
+    </div>
+
+    <form id="registerForm" class="space-y-4">
+      <input id="full_name" placeholder="Full Name" class="w-full border rounded-lg p-3"/>
+      <input id="username" placeholder="Username" class="w-full border rounded-lg p-3"/>
+      <input id="password" placeholder="Password" type="password" class="w-full border rounded-lg p-3"/>
+      <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg">Register</button>
+      <p class="text-sm text-gray-500 text-center">Already registered? <a href="doctor_login.html" class="text-indigo-600">Login</a></p>
+      <div id="msg" class="text-center mt-2"></div>
+    </form>
+  </div>
+</main>
+
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const full_name = document.getElementById('full_name').value.trim();
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const msg = document.getElementById('msg');
+  msg.textContent = '';
+  if (!username || !password) { msg.textContent = 'Please fill required fields'; return; }
+  try {
+    const res = await fetch('/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ full_name, username, password }) });
+    const data = await res.json();
+    if (res.ok) { msg.style.color='green'; msg.textContent = 'Registered! Redirecting...'; setTimeout(()=>location.href='doctor_login.html',1200); }
+    else { msg.style.color='red'; msg.textContent = data.message || 'Error'; }
+  } catch (err) { msg.style.color='red'; msg.textContent = 'Server error'; }
+});
+</script>
+</body>
+</html>

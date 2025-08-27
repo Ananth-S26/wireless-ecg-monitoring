@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>ECG Project — Hardware & Software</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-r from-blue-50 to-indigo-50 min-h-screen flex flex-col">
+
+  <!-- Header -->
+  <header class="bg-white shadow">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <img src="https://img.icons8.com/fluency/48/heart-with-pulse.png" alt="ECG Logo" class="w-10 h-10">
+        <h1 class="text-2xl font-bold text-indigo-700">ECG Monitoring Portal</h1>
+      </div>
+      <nav class="space-x-4">
+        <a href="index.html" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Home</a>
+        <a href="doctor_login.html" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Login</a>
+        <a href="doctor_register.html" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition">Register</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-grow p-6">
+    <div class="max-w-6xl mx-auto grid gap-6">
+      
+      <!-- Hero -->
+      <section class="bg-white rounded-2xl shadow p-6">
+        <div class="md:flex md:items-center md:justify-between">
+          <div>
+            <h2 class="text-2xl font-semibold text-indigo-700">Hardware & Software Overview</h2>
+            <p class="mt-2 text-gray-600">Summary of components, wiring notes, software stack, data formats and run instructions for the ECG project.</p>
+          </div>
+          <div class="mt-4 md:mt-0 text-sm text-gray-500">
+            Recommended: Chrome or Edge for device capture (Web Serial API).
+          </div>
+        </div>
+      </section>
+
+      <!-- Hardware row -->
+      <section class="grid md:grid-cols-2 gap-6">
+
+        <!-- Hardware card -->
+        <div class="bg-white rounded-2xl shadow p-6">
+          <h3 class="text-lg font-semibold text-indigo-700 mb-4">Hardware</h3>
+
+          <ul class="space-y-4 text-gray-700">
+            <li class="flex gap-4">
+              <img src="https://img.icons8.com/color/48/arduino.png" alt="Arduino" class="w-12 h-12">
+              <div>
+                <div class="font-semibold">Microcontroller</div>
+                <div class="text-sm text-gray-500">Arduino Uno / Arduino Nano or any MCU that streams ADC values via serial.</div>
+              </div>
+            </li>
+
+            <li class="flex gap-4">
+              <img src="https://img.icons8.com/color/48/heart-with-pulse.png" alt="ECG Sensor" class="w-12 h-12">
+              <div>
+                <div class="font-semibold">ECG Sensor Module</div>
+                <div class="text-sm text-gray-500">e.g. AD8232, AD8233 — analog front-end that outputs ECG waveform to ADC pin.</div>
+              </div>
+            </li>
+
+            <li class="flex gap-4">
+              <img src="https://images.icon-icons.com/3385/PNG/512/hotspot_network_wireless_signal_internet_connection_wifi_icon_212624.png" alt="NRF or Serial" class="w-12 h-12">
+              <div>
+                <div class="font-semibold">Wireless / Serial Link</div>
+                <div class="text-sm text-gray-500">nRF24L01 (RF) or direct USB Serial (recommended for simplicity). We use Web Serial API over USB in the web UI.</div>
+              </div>
+            </li>
+
+            <li class="flex gap-4">
+              <img src="https://images.icon-icons.com/621/PNG/512/power-symbol-in-a-circle-in-black-and-white_icon-icons.com_56905.png" alt="Power" class="w-12 h-12">
+              <div>
+                <div class="font-semibold">Power & Accessories</div>
+                <div class="text-sm text-gray-500">Power supply for MCU, electrodes (wet/adhesive), jumper wires, breadboard, optional op-amp/filter components.</div>
+              </div>
+            </li>
+          </ul>
+
+          <hr class="my-4">
+
+          <h4 class="font-semibold text-indigo-600 mb-2">Wiring Notes (quick)</h4>
+          <ol class="list-decimal pl-5 text-gray-700 space-y-1 text-sm">
+            <li>Connect ECG module output to an analog pin (A0) of the Arduino.</li>
+            <li>Ensure proper electrode placement and grounding for clean signal.</li>
+            <li>Set Arduino to send readings as ASCII lines, e.g. <code>Serial.println(String(seq) + "," + String(value))</code>.</li>
+            <li>Use a stable 3.3/5V supply per module requirements and add decoupling capacitors.</li>
+          </ol>
+
+        </div>
+
+        <!-- Example hardware diagram / hints -->
+        <div class="bg-white rounded-2xl shadow p-6">
+          <h3 class="text-lg font-semibold text-indigo-700 mb-4">Example Signal Path & Safety</h3>
+          <p class="text-gray-700 mb-3">Typical analog chain:</p>
+
+          <ul class="space-y-3 text-gray-700 text-sm">
+            <li>Electrodes → <span class="font-medium">ECG front-end (AD8232)</span> → low-pass/high-pass filters → MCU ADC → Serial → Browser</li>
+            <li class="font-semibold mt-2">Safety:</li>
+            <li>- Isolate patient from mains, use battery power if possible.</li>
+            <li>- Use medical-grade electrodes; consider isolation amplifiers for clinical use.</li>
+          </ul>
+
+          <div class="mt-6">
+            <img src="https://undraw.co/api/illustrations/medical.svg" alt="diagram" class="w-full rounded" onerror="this.style.display='none'">
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Software row -->
+      <section class="grid md:grid-cols-2 gap-6">
+
+        <!-- Software stack -->
+        <div class="bg-white rounded-2xl shadow p-6">
+          <h3 class="text-lg font-semibold text-indigo-700 mb-4">Software Stack</h3>
+
+          <div class="grid gap-3">
+            <div class="p-4 bg-gray-50 rounded">
+              <div class="font-semibold">Frontend</div>
+              <div class="text-sm text-gray-600 mt-1">
+                HTML + Tailwind CSS (UI), JavaScript (Chart.js). Uses the <span class="font-mono">Web Serial API</span> to read streaming ECG values from the device and render a live Chart.js waveform.
+              </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded">
+              <div class="font-semibold">Backend</div>
+              <div class="text-sm text-gray-600 mt-1">
+                Node.js + Express server, SQLite database for storing doctor accounts and saved ECG recordings. Passwords hashed with <code>bcrypt</code>.
+              </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded">
+              <div class="font-semibold">APIs</div>
+              <div class="text-sm text-gray-600 mt-1">
+                <ul class="list-disc pl-5">
+                  <li><code>POST /register</code> — register doctor</li>
+                  <li><code>POST /login</code> — login</li>
+                  <li><code>POST /patients</code> — save ECG (JSON array)</li>
+                  <li><code>GET /patients</code> — fetch saved records (with filters)</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="p-4 bg-gray-50 rounded">
+              <div class="font-semibold">Data Format</div>
+              <div class="text-sm text-gray-600 mt-1">
+                ECG streaming lines are parsed as CSV-like lines. Example line formats your Arduino can send:
+                <pre class="bg-gray-100 rounded p-2 mt-2 text-xs">seq,VALUE
+VALUE
+ADC,123</pre>
+                The frontend takes the numeric <code>VALUE</code> (usually ADC reading) and scales/displays it.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Runtime & commands -->
+        <div class="bg-white rounded-2xl shadow p-6">
+          <h3 class="text-lg font-semibold text-indigo-700 mb-4">Run & Deploy (local)</h3>
+
+          <div class="text-sm text-gray-700 space-y-3">
+            <div>
+              <div class="font-semibold">Prerequisites</div>
+              <ul class="list-disc pl-5 mt-1">
+                <li>Node.js (LTS)</li>
+                <li>Chrome or Edge (desktop) for Web Serial</li>
+              </ul>
+            </div>
+
+            <div>
+              <div class="font-semibold">Install & Start</div>
+              <pre class="bg-gray-100 rounded p-2 text-xs mt-2">cd backend
+npm install
+npm start</pre>
+              After starting the server open: <span class="font-mono">http://localhost:5000</span>
+            </div>
+
+            <div>
+              <div class="font-semibold">Save format</div>
+              <div class="text-gray-600 mt-1">
+                When saving, the frontend sends ECG as JSON array:
+                <pre class="bg-gray-100 rounded p-2 text-xs mt-2">{ "name":"John Doe", "ecg_data":[102,110,95, ...] }</pre>
+              </div>
+            </div>
+
+            <div>
+              <div class="font-semibold">Security notes</div>
+              <ul class="list-disc pl-5 mt-1 text-gray-600">
+                <li>Passwords are stored hashed with <code>bcrypt</code>.</li>
+                <li>For real deployment use HTTPS, proper session management (JWT or server sessions), and stricter input validation.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Analysis / Alerts -->
+      <section class="bg-white rounded-2xl shadow p-6">
+        <h3 class="text-lg font-semibold text-indigo-700 mb-3">How Alerts Work (current demo)</h3>
+        <div class="text-gray-700 text-sm">
+          <ul class="list-disc pl-5 space-y-2">
+            <li><strong>R-peak detection:</strong> a simple threshold + refractory period is used to identify beats from the ECG trace.</li>
+            <li><strong>BPM calculation:</strong> average R-R interval (milliseconds) → <code>BPM = 60000 / avgRR</code>.</li>
+            <li><strong>Alert thresholds (demo):</strong> Bradycardia &lt; 50–60 BPM, Tachycardia &gt; 100–120 BPM (configurable).</li>
+          </ul>
+
+          <div class="mt-4 text-xs text-gray-500">
+            Note: this is a demo-level detector. For clinical-grade detection use established algorithms (Pan–Tompkins, bandpass + derivative + adaptive thresholding) and validate with labeled ECG datasets.
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick snippets -->
+      <section class="bg-white rounded-2xl shadow p-6">
+        <h3 class="text-lg font-semibold text-indigo-700 mb-3">Useful Code Snippets</h3>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <div>
+            <div class="font-semibold mb-1">Arduino (example)</div>
+            <pre class="bg-gray-100 rounded p-3 text-xs">void loop() {
+  int val = analogRead(A0);
+  Serial.println(String(millis()) + "," + String(val));
+  delay(16); // ~60 Hz
+}</pre>
+          </div>
+
+          <div>
+            <div class="font-semibold mb-1">Save to backend (frontend)</div>
+            <pre class="bg-gray-100 rounded p-3 text-xs">await fetch('/patients',{
+  method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body: JSON.stringify({ name, ecg_data: samples })
+});</pre>
+          </div>
+        </div>
+      </section>
+
+      
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white shadow-inner">
+    <div class="max-w-6xl mx-auto px-6 py-4 text-center text-sm text-gray-500">
+      © 2025 ECG Monitoring System
+    </div>
+  </footer>
+
+</body>
+</html>
